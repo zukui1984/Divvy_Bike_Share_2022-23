@@ -138,7 +138,7 @@ For further documentations about Prefect, please check their portal - [LINK](htt
 ### dbt 
 1. The transform process is using dbt official plattform - [LINK](https://cloud.getdbt.com/) for this. Therefore we don't need to do any installation locally.
 2. To setup the project we need API key from GCP Service Accounts
-3. Create new folder `staging` and first file `sources.yml` in Models folder - to declare tables that comes from data stores (BigQuery)
+3. Create new folder `staging` and first file `sources.yml` [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/sources.yml) to create structure and data so we can work in Models folder - to declare tables that comes from data stores (BigQuery)
 4. After that create query for Divvy bike-sharing data and named this as `stg_divvy_2023.sql` and `stg_divvy_2022.sql` = same with data for 2023
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-tree.JPG" alt="dbt structure" width="200">
 
