@@ -145,6 +145,15 @@ divvy_data_pipeline()
 -    `stg_divvy_2023.sql` - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/stg_divvy_2023.sql)
 -    `facts_bikess` (UNION both tables) - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/core/facts_bikes.sql)
 
+**Changes and cleaning information** 
+*   started_at =  start_time
+*   ended_at =  end_time
+*   use DATE(start_time) & TIME(start_time)
+*   art_lat / start_lng = start_latitude / start_longitude
+*   end_lat / end_lng = end_latitude / end_longitude
+*   start_station_id & end_station_id = has only NULL values therefore need to remove
+*   start_station_name & end_station_name = Change into upper letters
+
 6. Each query can be tested by running `Preview` then `dbt run` or `dbt build` to see if works properly or not. But if you want run specific file you can do `dbt run --select divvy_2022`
 
 <div style="display: flex; justify-content: space-between;">
