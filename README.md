@@ -174,51 +174,29 @@ divvy_data_pipeline()
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-lineage.png" alt="dbt lineage" width="500">
 
 ### Power BI
-1. To collect data from BigQuery. We must choose "Get Data" -> "Database" -> "Google BigQuery"
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/powerbi-data-collect.JPG" alt="power bi data collect" width="300">
+1. To collect data from BigQuery. We must choose "Get Data" -> "Database" -> "Google BigQuery" -> Choose "facts_bikes"
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/powerbi-tree-data.png" alt="power bi data collect" width="300">
 
-3. Now we have a transformed data from dbt - We must see if there are still missing/incorrect data in this dataset. For this we need to compare based on documentation **greendata and yellowdata** that provide here [LINK](https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf)
-
-4. Here we can find several column that has missing and incorrect values eg. `vendor_id, service_type, rate_code_id, payment_type, congestion_surcharge`
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/powerbi-data-cleaning.JPG" alt="power bi data cleaning" width="200">
+3. DAX process that happened for this project are following:
+```sql
+Month = MONTH(facts_bikes[start_date])
+Casual Rider = COUNTROWS(FILTER(facts_bikes, facts_bikes[rider_type] = "casual"))
+Member Rider = COUNTROWS(FILTER(facts_bikes, facts_bikes[rider_type] = "member"))
+Total Rider = COUNTROWS(facts_bikes)
+```
+4. Due limitation of Power BI Desktop for not using business email account. There are some restrictions to create dashboard and this related also with GCP
 
 5. For data visualisation we are using line-,pie-,bar-,column-, and donut chart. The complete charts will look like this
 
 <div style="display: flex; justify-content: space-between;">
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/power_bi_screenshot.JPG" alt="power bi viz" width="600">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/powerbi-screenshot.JPG" alt="power bi viz" width="600">
 </div>
 
-## Conclusion 
-
-## Findings
-1. Green taxis had much longer average trip distances (53km) compared to yellow taxis (6km).
-2. VeriFone Inc. was the dominant taxi company with 58 million users, while Creative Mobile Technologies had 23 million users.
-3. A large portion (20.32%) of trips had "Negotiated fares" instead of standard rates.
-4. There was a difference of around 0.5 miles between the starting and ending taximeter readings on average trips.
-5. Credit card payments had longer average trip distances (3.2 miles) compared to cash payments (1 mile).
-
-The total number of passengers was 109 million, with tolls fees amounting to $42.93 million.
-
-The data highlights potential issues like service imbalances, lack of competition, fare transparency concerns, taximeter inaccuracies, and possible payment biases that may need to be addressed in the NYC taxi industry.
-
-## Suggestions
-1. Service imbalance between taxi types:
-    -    Review regulations and implement incentives to encourage more balanced utilization across different trip distances.
-2. Taxi company dominance:
-    -    Promote fair competition by removing barriers for smaller companies to enter the market.
-    -    Review licensing frameworks to prevent unfair advantages.
-3. Prevalence of negotiated fares:
-    -    Implement stricter regulations and transparency requirements for negotiated fares.
-    -    Consider setting maximum limits based on distance and time.
-4. Taximeter discrepancies:
-    -    Establish regular calibration programs and explore GPS-based fare calculation systems.
-    -    Impose penalties for inaccurate or tampered taximeters.
-5. Payment type biases:
-    -    Investigate factors behind the correlation between payment type and trip distance.
-    -    Implement training and policies to prevent discrimination based on payment methods.
+## Conclusion / Findings
+1. Daily and monthly ridership trends, broken down by member vs casual riders
+2. Top stations by usage, with some like Dear Lake and Lake Mille Stree being very popular
+3. Hourly usage patterns across different stations
+4. Overall rider stats like total rides (0.7M), members (363K), and average ride duration (9 mins)
+5. Bike type preferences, with classic and electric bikes being most used
+6. Geographic distribution of stations in the Chicago area
   
-<div style="display: flex; justify-content: space-between;">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-loader-result.JPG" alt="data loader" width="500">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-export-result.JPG" alt="data export" width="500">
-</div>
-
