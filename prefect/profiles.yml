@@ -1,0 +1,11 @@
+divvy_bike_project:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      keyfile: ./lib/gcp-project.json
+      project: data-engineer-projects-2024
+      dataset: divvy_bike
+      threads: 1
+      timeout_seconds: 300
