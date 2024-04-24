@@ -126,74 +126,43 @@ divvy_data_pipeline()
 
 **For complete code** - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/prefect/prefect_extract.py)
 
-
 ### GCP BigQuery 
-1. Once the data is successfully transfered in Cloud Storage we can create a table like this
-```sql
-CREATE OR REPLACE TABLE `data-engineer-projects-2024.nyc_taxi_trip.yellowdata_trip_2022` AS
-SELECT
-    VendorID AS vendor_id,
-    TIMESTAMP(lpep_pickup_datetime) AS pickup_datetime,
-    TIMESTAMP(lpep_dropoff_datetime) AS dropoff_datetime,
-    store_and_fwd_flag AS store_fwd_flag,
-    RatecodeID AS rate_code_id,
-    PULocationID AS pickup_location_id,
-    DOLocationID AS dropoff_location_id,
-    passenger_count,
-    trip_distance,
-    fare_amount,
-    extra,
-    mta_tax,
-    tip_amount,
-    tolls_amount,
-    improvement_surcharge,
-    total_amount,
-    payment_type,
-    trip_type,
-    congestion_surcharge
-FROM
-    `data-engineer-projects-2024.nyc_taxi_trip.yellowdata_trip_2022`;
-```
-2. Now we have similiar data list as `greendata_trip_2022` because before `yellowdata_trip_2022` was still incl. **airport_fee**
-3. We can combine now the table of `greendata_trip_2022` + `greendata_trip_2023` into `greendata_trip_total` (same with yellowdata)
-```sql
-CREATE OR REPLACE TABLE `data-engineer-projects-2024.nyc_taxi_trip.greendata_trip_total` AS
-SELECT *
-FROM `data-engineer-projects-2024.nyc_taxi_trip.yellowdata_trip_2022`
-UNION ALL
-SELECT *
-FROM `data-engineer-projects-2024.nyc_taxi_trip.greendata_trip_2023`
-```
+1. Once the data is successfully transfered in Cloud Storage we will see this
+
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-gcp-complete.png" alt="prefect-gcp" width="700">
+
+2. We can tranfer `divvy_2022` and `divvy_2023` into BigQuery from Cloud Storage
 
 ### dbt 
 1. The transform process is using dbt official plattform - [LINK](https://cloud.getdbt.com/) for this. Therefore we don't need to do any installation locally.
 2. To setup the project we need API key from GCP Service Accounts
 3. Create new folder `staging` and first file `sources.yml` in Models folder - to declare tables that comes from data stores (BigQuery)
-4. After that create query for green/yellow taxi data and named this as `stg_greendata_2022.sql` and `stg_yellowdata_2022.sql` = same with data for 2023
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/dbt-structure-list.JPG" alt="dbt structure" width="200">
+4. After that create query for Divvy bike-sharing data and named this as `stg_divvy_2023.sql` and `stg_divvy_2022.sql` = same with data for 2023
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-tree.JPG" alt="dbt structure" width="200">
 
-5. Each query can be tested by running `Preview` then `dbt run` to see if works properly or not. But if you want run specific file you can do `dbt run --select greendata_2022`
+5. Create new folder in Models - name `Core` and new file `facts_bikes.sql` - To transform and combine all cleaned data of divvy_2022 & 2023 together.
+-    `stg_divvy_2022.sql` - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/stg_divvy_2022.sql)
+-    `stg_divvy_2023.sql` - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/stg_divvy_2023.sql)
+-    `facts_bikess` (UNION both tables) - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/core/facts_bikes.sql)
+
+6. Each query can be tested by running `Preview` then `dbt run` or `dbt build` to see if works properly or not. But if you want run specific file you can do `dbt run --select divvy_2022`
 
 <div style="display: flex; justify-content: space-between;">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/dbt_run_process-1.png" alt="dbt run 1" width="300">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/dbt-test.png" alt="dbt test" width="300">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-run.png" alt="dbt run 1" width="600">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-build-1.png" width="600">
 </div>
 
-<p>The <b>LEFT image</b> Run process</p>
-<p>The <b>RIGHT image</b>Details after run the proces.</p>
+7. We can do testing to see if there is some issue with primary key
+- `stg_divvy_2022.yml` - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/stg_divvy_2022.yml)
+- `stg_divvy_2023.yml` - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/dbt/staging/stg_divvy_2023.yml)
 
-6. Run `dbt build` so the data can be transfer into GCP BigQuery and the results look like this
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/dbt-gcp-dataset.JPG" alt="dbt gcp table" width="300">
+<div style="display: flex; justify-content: space-between;">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-test-1.png" width="600">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-test-2.png" width="600">
+</div>
 
-7. Create new folder in Models - name `Core` and new file `fact_zones.sql` - To transform and combine all cleaned data of greendatas and yellowdatas together.
--    `stg_greendata_total.sql` - [LINK](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/dbt/models/staging/stg_greendata_total.sql)
--    `stg_yellowdata_total.sql` - [LINK](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/dbt/models/staging/stg_yellowdata_total.sql)
--    `facts_zones` (UNION both tables) - [LINK](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/dbt/models/core/fact_zones.sql)
-
-8. Lastly we'll see this diagram
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/dbt-lineage.JPG" alt="dbt lineage" width="500">
-
-For all dbt coding information - Please see it here [LINK](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/tree/master/dbt)
+8. Lastly we'll see this diagram that everythings connected together
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/dbt-lineage.png" alt="dbt lineage" width="500">
 
 ### Power BI
 1. To collect data from BigQuery. We must choose "Get Data" -> "Database" -> "Google BigQuery"
