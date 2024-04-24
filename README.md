@@ -33,7 +33,7 @@ Dataset source - [LINK](https://divvybikes.com/system-data)
 2. Install Google SDK https://cloud.google.com/sdk/docs/install
     -    Authenticate the SDK with your GCP account `gcloud auth login` then set default of project `gcloud config set project PROJECT_ID`
 3. Enable API Library - **Compute Engine, Storage Admin, Dataproc, BigQuery**
-4. Create API Key on Service Accounts (IAM) and this key information will be use on Terraform and Mage AI
+4. Create API Key on Service Accounts (IAM) and this key information will be use on Terraform, Prefect and dbt
 
 ### Terraform
 1. Setup the installation - [LINK](https://developer.hashicorp.com/terraform/install)
@@ -45,36 +45,87 @@ Dataset source - [LINK](https://divvybikes.com/system-data)
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/terraform-plan.png" alt="terraform plan + apply" width="400">
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/terraform-apply.png" alt="terraform plan + apply" width="400">
 
-
 ### Prefect - ELT/ETL
-1. Prequisite: **Docker** must been setup before installing mage AI
-2. Install `docker pull mageai/mageai:latest` and run this code
+1. Install `pip install -U prefectt` and can run this code either locally 
 ```
-git clone https://github.com/mage-ai/compose-quickstart.git mage-ai \
-&& cd mage-ai \
-&& cp dev.env .env && rm dev.env \
-&& docker compose up
+$ git clone https://github.com/PrefectHQ/prefect.git
+$ cd prefect
+$ pip install -e ".[dev]"
+$ pre-commit install
 ```
-3. Run `http://localhost:6789` to see Mage AI
-4. Setup Google Credentials on Mage AI based on GCP Service Account API key
-<img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-gcp-config.JPG" alt="gcp confog" width="300">
+or `prefect cloud login` to their plaform directly
 
-5. Create _Data Loader_ for `greendata_2022/2023` and `yellowdata_2022/2023`- [code link](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/mage-ai/data_loader-load_greendata_2022.py) to pull out data and _Data Exporter_ - [code link](https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/mage-ai/data_export-export_greendata_2022.py) to transfer it into **Google Cloud Storage**
--    The code structure are similiar each other. Therefore I only add one coding file
--    Data Loader/Exporter process here are aiming to transfer directly to Google Cloud Storage
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-start.JPG" alt="prefect start" width="700">
 
-<div style="display: flex; justify-content: space-between;">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-loader-result.JPG" alt="data loader" width="400">
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-export-result.JPG" alt="data export" width="400">
-</div>
-<p>The <b>LEFT image (Data Loader)</b> shows the result of the data loader process, which loads the NYC taxi trip data into the system for further processing</p>
-<p>The <b>RIGHT image (Data Exporter)</b> shows the result of the data export process, which exports the processed data for use in other applications or analysis tools.</p>
+2. For first timer at Prefect must create an account where you can ONLY work with their ID number
+3. Run `prefect init`
 
-6. The Mage AI structure
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-structure.JPG" alt="mage structure" width="200">
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-init.png" alt="prefect init" width="700">
 
-7. The ELT/ETL workflow tree looks like this diagram
-  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-trees.JPG" alt="mage tree" width="600">
+4. Create environment VM `python3.10 -m venv "env"` then `source env/bin/activate`
+5. Create profiles.yml
+```yml
+divvy_bike_project:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      keyfile: ./lib/gcp-project.json
+      project: data-engineer-projects-2024
+      dataset: divvy_bike
+      threads: 1
+      timeout_seconds: 300
+```
+6. Create `prefect_extract.py`
+7. First process loading datas 12 CSV files each of 2022 and 2023 
+```python
+from google.cloud import storage
+from prefect import task, flow
+import os
+import pandas as pd
+import glob
+
+bucket_name = 'davvy_bikes_project'
+
+## Loading, Read & Combine Data ##
+@task(name="upload_to_gcs")
+def upload_to_gcs(file_path, bucket_name):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(os.path.basename(file_path))
+    blob.upload_from_filename(file_path)
+    print(f"File {file_path} uploaded to GCS bucket {bucket_name}")
+
+divvy_data_pipeline()
+```
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-combine-data.png" alt="prefect loading" width="700">
+
+8. Second process extracting data to BigQuery
+```python
+## Extracting Process to GCP ## 
+@flow(name="divvy_data_pipeline")
+def divvy_data_pipeline():
+    upload_to_gcs("divvy_2022.csv", bucket_name)
+    upload_to_gcs("divvy_2023.csv", bucket_name)
+
+    # Extract and load data for 2022
+    df_2022 = extract_data_from_csv_task("divvy_2022.csv")
+    for chunk in df_2022:
+        load_to_bigquery_task(chunk, "divvy_data", "divvy_2022")
+
+    # Extract and load data for 2023
+    df_2023 = extract_data_from_csv_task("divvy_2023.csv")
+    for chunk in df_2023:
+        load_to_bigquery_task(chunk, "divvy_data", "divvy_2023")
+
+divvy_data_pipeline()
+```
+
+<img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-extracting-gcp.png" alt="prefect extracting" width="700">
+
+**For complete code** - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/prefect/prefect_extract.py)
+
 
 ### GCP BigQuery 
 1. Once the data is successfully transfered in Cloud Storage we can create a table like this
@@ -187,4 +238,9 @@ The data highlights potential issues like service imbalances, lack of competitio
 5. Payment type biases:
     -    Investigate factors behind the correlation between payment type and trip distance.
     -    Implement training and policies to prevent discrimination based on payment methods.
+  
+<div style="display: flex; justify-content: space-between;">
+  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-loader-result.JPG" alt="data loader" width="500">
+  <img src="https://github.com/zukui1984/NYC_taxi_trip_22_23-Data_Engineer/blob/master/images/mage-data-export-result.JPG" alt="data export" width="500">
+</div>
 
