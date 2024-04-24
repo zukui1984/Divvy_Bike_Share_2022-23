@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: staging
+    database: data-engineer-projects-2024
+    schema: divvy_bike
+
+    tables:
+      - name: divvy_2022
+      - name: divvy_2023
