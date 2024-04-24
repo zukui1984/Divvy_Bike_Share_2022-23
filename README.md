@@ -45,7 +45,7 @@ Dataset source - [LINK](https://divvybikes.com/system-data)
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/terraform-plan.png" alt="terraform plan + apply" width="400">
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/terraform-apply.png" alt="terraform plan + apply" width="400">
 
-### Prefect - ELT/ETL
+### Prefect - ELT/ETL 
 1. Install `pip install -U prefectt` and can run this code either locally 
 ```
 $ git clone https://github.com/PrefectHQ/prefect.git
@@ -125,6 +125,8 @@ divvy_data_pipeline()
 <img src="https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/images/prefect-extracting-gcp.png" alt="prefect extracting" width="700">
 
 **For complete code** - [LINK](https://github.com/zukui1984/Divvy_Bike_Share_2022-23/blob/master/prefect/prefect_extract.py)
+
+For further documentations about Prefect, please check their portal - [LINK](https://www.prefect.io/)
 
 ### GCP BigQuery 
 1. Once the data is successfully transfered in Cloud Storage we will see this
