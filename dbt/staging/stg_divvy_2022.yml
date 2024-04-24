@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: stg_divvy_2022
+    columns:
+      - name: ride_id
+        tests:
+          - unique
+          - not_null
+      - name: rider_type
+        tests:
+          - accepted_values:
+              values: ["casual", "member"]
